@@ -178,6 +178,37 @@ char *get_prev_command(char *history) {
 
 
 /**
+ * @description Hàm thực thi lệnh
+ * @param 
+ * @return
+ */
+void exec_command(char **args, char **redir_argv, int wait, int res) {
+    
+    // Chưa thực thi builtin commands
+    if (res == 0) {
+        int status;
+        // Tạo tiến trình con
+        pid_t pid = fork();
+        if (pid == 0) {
+            // Child process
+            
+            if (res == 0) res = simple_shell_pipe(args);
+            if (res == 0) execvp(args[0], args);
+            exit(EXIT_SUCCESS);
+        } else if (pid < 0) { // Khi mà việc tạo tiến trình con bị lỗi
+            perror("Error: Error forking");
+            exit(EXIT_FAILURE);
+        } else { // Thực thi chạy nền
+            // Parent process
+            // printf("[LOGGING] Parent pid = <%d> spawned a child pid = <%d>.\n", getpid(), pid);
+            if (wait == 1) {
+                waitpid(pid, &status, WUNTRACED); // 
+            }
+        }
+    }
+}
+
+/**
  * @description Hàm thoát
  * @param args mảng chuỗi chứa những chuỗi arg để thực hiện lệnh
  * @return
@@ -215,36 +246,7 @@ int simple_shell_pipe(char **args) {
     }
     return 0;
 }
-/**
- * @description Hàm thực thi lệnh
- * @param 
- * @return
- */
-void exec_command(char **args, char **redir_argv, int wait, int res) {
-    
-    // Chưa thực thi builtin commands
-    if (res == 0) {
-        int status;
-        // Tạo tiến trình con
-        pid_t pid = fork();
-        if (pid == 0) {
-            // Child process
-            
-            if (res == 0) res = simple_shell_pipe(args);
-            if (res == 0) execvp(args[0], args);
-            exit(EXIT_SUCCESS);
-        } else if (pid < 0) { // Khi mà việc tạo tiến trình con bị lỗi
-            perror("Error: Error forking");
-            exit(EXIT_FAILURE);
-        } else { // Thực thi chạy nền
-            // Parent process
-            // printf("[LOGGING] Parent pid = <%d> spawned a child pid = <%d>.\n", getpid(), pid);
-            if (wait == 1) {
-                waitpid(pid, &status, WUNTRACED); // 
-            }
-        }
-    }
-}
+
 /**
  * @description Hàm main :))
  * @param void không có gì
